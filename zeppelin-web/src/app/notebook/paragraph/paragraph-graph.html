@@ -21,6 +21,11 @@ limitations under the License.
        id="p{{paragraph.id}}_table"
        class="table">
   </div>
+  
+  <div ng-if="getGraphMode()=='pivot'"
+       id="p{{paragraph.id}}_pivot"
+       class="table" style="overflow: auto; width: 100%">
+  </div>
 
   <div ng-if="getGraphMode()=='multiBarChart'"
        id="p{{paragraph.id}}_multiBarChart">

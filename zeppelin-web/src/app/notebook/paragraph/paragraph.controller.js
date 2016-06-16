@@ -1053,19 +1053,6 @@ angular.module('zeppelinWebApp')
       } else if (keyEvent.ctrlKey && keyEvent.shiftKey && keyCode === 187) { // Ctrl + Shift + =
         $scope.paragraph.config.colWidth = Math.min(12, $scope.paragraph.config.colWidth + 1);
         $scope.changeColWidth();
-      } else if (keyEvent.ctrlKey && keyEvent.altKey && ((keyCode >= 48 && keyCode <=57) || keyCode === 189 || keyCode === 187)) { // Ctrl + Alt + [1~9,0,-,=]
-        var colWidth = 12;
-        if (keyCode === 48) {
-          colWidth = 10;
-        } else if (keyCode === 189) {
-          colWidth = 11;
-        } else if (keyCode === 187) {
-          colWidth = 12;
-        } else {
-          colWidth = keyCode - 48;
-        }
-        $scope.paragraph.config.colWidth = colWidth;
-        $scope.changeColWidth();
       } else if (keyEvent.ctrlKey && keyEvent.altKey && keyCode === 84) { // Ctrl + Alt + t
         if ($scope.paragraph.config.title) {
           $scope.hideTitle();
@@ -1209,6 +1196,8 @@ angular.module('zeppelinWebApp')
 
       if (!type || type === 'table') {
         setTable($scope.paragraph.result, refresh);
+      } else if (type === 'pivot') {
+        setTablePivot($scope.paragraph.result, refresh);
       }
       else {
         setD3Chart(type, $scope.paragraph.result, refresh);
@@ -1230,7 +1219,32 @@ angular.module('zeppelinWebApp')
     websocketMsgSrv.commitParagraph($scope.paragraph.id, title, text, config, params);
   };
 
-  var setTable = function(type, data, refresh) {
+  var setTablePivot = function(data, refresh) {
+    var renderTablePivot = function() {
+      var height = $scope.paragraph.config.graph.height;
+      var resultRows = $scope.paragraph.result.rows;
+      var columnNames = _.pluck($scope.paragraph.result.columnNames, 'name');
+      var container = angular.element('#p' + $scope.paragraph.id + '_pivot');
+
+      container.css('height', height);
+      container.pivotUI([columnNames].concat(resultRows), {});
+    };
+
+    var retryRenderer = function() {
+      if (angular.element('#p' + $scope.paragraph.id + '_pivot').length) {
+        try {
+          renderTablePivot();
+        } catch(err) {
+          console.log('Chart drawing error %o', err);
+        }
+      } else {
+        $timeout(retryRenderer,10);
+      }
+    };
+    $timeout(retryRenderer);
+  };
+
+  var setTable = function(data, refresh) {
     var renderTable = function() {
       var height = $scope.paragraph.config.graph.height;
       angular.element('#p' + $scope.paragraph.id + '_table').css('height', height);
